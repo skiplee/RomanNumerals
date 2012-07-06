@@ -8,7 +8,7 @@ using RomanNumerals;
 namespace RomanNumeralTests
 {
     [TestFixture]
-    public class ConverterTests
+    public class RomanNumeralExtensionTests
     {
         [TestCase(1, "I")]
         [TestCase(3, "III")]
@@ -52,14 +52,14 @@ namespace RomanNumeralTests
         [TestCase("VIX", false)]
         [TestCase("VX", false)]
         [TestCase("XXXX", false)]
-        [TestCase("IXXX", false)]
+        [TestCase("IXX", false)]
         [TestCase("XIXXX", false)]
         [TestCase("XIX", true)]
-        [TestCase("IX", true)]
+        [TestCase("IX", true)] 
         public void RomanValidFormat(string roman, bool expected)
         {
             //act
-            var result = RomanUtilities.RomanValidFormat(roman);
+            var result = roman.RomanValidFormat();
             //assert
             Assert.That(result, Is.EqualTo(expected)); 
         }

@@ -11,17 +11,17 @@ namespace RomanNumerals
             var repeat = 1;
             for (int i = roman.Length - 1; i >= 0; i--)
             {
-                var current = RomanNumeralLookup.Instance.RomanCharacters[roman[i].ToString()];
+                var current = RomanCharacter.Symbols[roman[i]];
                 if (current.Value == 1) nextCanBeDecrement = false;
-                var next = i == 0 ? null : RomanNumeralLookup.Instance.RomanCharacters[roman[i - 1].ToString()];
+                var next = i == 0 ? null : RomanCharacter.Symbols[roman[i - 1]];
                 if (next != null)
                 {
-                    repeat = current.Value == next.Value ? repeat + 1 : 1;
-                    if (repeat > current.MaxSequential) return false;
+                    repeat = IncrementOrResetRepeatCount(repeat, next, current);
+                    if (SymbolIsRepeatedTooManyTimes(current, repeat)) return false;
                     if (nextCanBeDecrement)
                     {
                         nextCanBeDecrement = false;
-                        if (next.Value < current.Value && next.Value != current.DecrementValue)
+                        if (next.Value < current.Value && next.Value != current.Decrementor.Value)
                             return false;
                     }
                     else
@@ -34,6 +34,16 @@ namespace RomanNumerals
                 max = current.Value > max ? current.Value : max;
             }
             return true;
+        }
+
+        private static bool SymbolIsRepeatedTooManyTimes(RomanCharacter current, int repeat)
+        {
+            return repeat > current.MaxSequential;
+        }
+
+        private static int IncrementOrResetRepeatCount(int repeat, RomanCharacter next, RomanCharacter current)
+        {
+            return current.Value == next.Value ? repeat + 1 : 1;
         }
     }
 }
