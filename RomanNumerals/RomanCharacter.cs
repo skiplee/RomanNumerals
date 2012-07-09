@@ -2,21 +2,6 @@ using System.Collections.Generic;
 
 namespace RomanNumerals
 {
-    //class RomanCharacter
-    //{
-    //    public string Character { get; set; }
-    //    public int Value { get; set; }
-    //    public int Decrementor { get; set; }
-    //    public int MaxSequential 
-    //    { 
-    //        get 
-    //        {
-    //            if (Decrementor == 0) return 3;
-    //            return Value/Decrementor == 10 ? 3 : 1; 
-    //        }
-    //    }
-    //}
-
     public sealed class RomanCharacter
     {
         //"enum" elements are static:
@@ -39,7 +24,7 @@ namespace RomanNumerals
         {
             get
             {
-                if (Decrementor == null) return 3;
+                if (Character == 'I') return 3;
                 return Value / Decrementor.Value == 10 ? 3 : 1;
             }
         }

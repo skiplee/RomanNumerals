@@ -55,7 +55,8 @@ namespace RomanNumeralTests
         [TestCase("IXX", false)]
         [TestCase("XIXXX", false)]
         [TestCase("XIX", true)]
-        [TestCase("IX", true)] 
+        [TestCase("IX", true)]
+        [TestCase("XXXVI", true)]
         public void RomanValidFormat(string roman, bool expected)
         {
             //act
