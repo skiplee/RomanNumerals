@@ -53,6 +53,8 @@ namespace RomanNumeralTests
         [TestCase("VX", false)]
         [TestCase("XXXX", false)]
         [TestCase("IXX", false)]
+        [TestCase("IXC", false)]
+        [TestCase("XCI", true)]
         [TestCase("XIXXX", false)]
         [TestCase("XIX", true)]
         [TestCase("IX", true)]

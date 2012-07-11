@@ -12,52 +12,45 @@ namespace RomanNumerals
             if (number <= 0)  throw new ArgumentOutOfRangeException("number", "Must be greater than zero.");
             if (number >= 4000) throw new ArgumentOutOfRangeException("number", "Must be less than or equal to 4000");
 
-            string roman = "";
-            roman += RomanNumeralForPlace(1000, number, RomanCharacter.M); 
-            roman += RomanNumeralForPlace(100 , number, RomanCharacter.C);
-            roman += RomanNumeralForPlace(10  , number, RomanCharacter.X);
-            roman += RomanNumeralForPlace(1   , number, RomanCharacter.I);
+            var roman = String.Empty;
+            roman += RomanNumeralForNumber(number, RomanCharacter.M); 
+            roman += RomanNumeralForNumber(number, RomanCharacter.C);
+            roman += RomanNumeralForNumber(number, RomanCharacter.X);
+            roman += RomanNumeralForNumber(number, RomanCharacter.I);
             return roman;
         }
 
-
-        //clean up to not take place
-        private static string RomanNumeralForPlace(int place, int number, RomanCharacter romanCharacter)
+        private static string RomanNumeralForNumber(int number, RomanCharacter romanCharacter)
         {
-            string roman = "";
-            var placeValue = (number / place) % 10;
-
-            if (placeValue == 9)
+            int digit = PlaceValueForRomanNumeral(number, romanCharacter);
+            if (digit == 9)
                 return String.Concat(romanCharacter.Character, romanCharacter.TenOfThese.Character);
-            if (placeValue == 4)
+            if (digit == 4)
                 return String.Concat(romanCharacter.Character, romanCharacter.FiveOfThese.Character);
-            if (placeValue >= 5)
+            string roman = "";
+            if (digit >= 5)
             {
                 roman = romanCharacter.FiveOfThese.Character.ToString();
-                placeValue -= 5;
+                digit -= 5;
             }
-            roman += new string(romanCharacter.Character, placeValue);
+            roman += new string(romanCharacter.Character, digit);
             return roman;
         }
 
-        private static string RomanNumeralForPlacex(int place, int number, char oner, char fiver, char tener)
+        /// <summary>
+        /// Return the digit for a place value; for instance, for Roman Numeral C (100)
+        ///   and number 3214, return 2 (the hundred's place)
+        /// </summary>
+        /// <param name="number"></param>
+        /// <param name="roman"></param>
+        /// <returns></returns>
+        private static int PlaceValueForRomanNumeral(int number, RomanCharacter roman)
         {
-            string roman = "";
-            var placeValue = (number / place) % 10;
-            if (placeValue == 9)
-                return String.Concat(oner, tener);
-            if (placeValue == 4)
-                return String.Concat(oner, fiver);
-            if (placeValue >= 5)
-            {
-                roman = fiver.ToString();
-                placeValue -= 5;
-            }
-            roman += new string(oner, placeValue);
-            return roman;
+            int digit = number%(roman.Value*10)/roman.Value;
+            if (digit < 0 || digit > 10) 
+                throw new ArithmeticException("digit must be between 0 and 9 inclusive");
+            return digit;
         }
-
-
         public static int RomanToInt(this string roman)
         {
             if (!roman.RomanValidFormat()) throw new ArgumentException(String.Format("Invalid RomanNumeral format: {0}", roman));
@@ -83,13 +76,13 @@ namespace RomanNumerals
 
         public static bool RomanValidFormat(this string roman)
         {
-            var nextCanBeDecrement = true;
-            var maxSoFar = RomanCharacter.Symbols[roman[roman.Length - 1]];
+            var nextCanBeDecrement = true; var maxSoFar = RomanCharacter.Symbols[roman[roman.Length - 1]];
             var repeat = 1;
             for (int i = roman.Length - 1; i >= 0; i--)
             {
                 var current = RomanCharacter.Symbols[roman[i]];
                 if (current.Value == 1) nextCanBeDecrement = false;
+                maxSoFar = current.Value > maxSoFar.Value ? current : maxSoFar;
                 var next = i == 0 ? null : RomanCharacter.Symbols[roman[i - 1]];
                 if (next != null)
                 {
@@ -102,30 +95,31 @@ namespace RomanNumerals
                     }
                     else
                     {
-                        if (TheNextValueIsValid(current, next, maxSoFar)) return false;
+                        if (TheNextValueIsInvalid(current, next, maxSoFar)) return false;
                     }
                     nextCanBeDecrement = CanTheNextValueBeADecrement(current, next, nextCanBeDecrement);
+
                 }
-                maxSoFar = current.Value > maxSoFar.Value ? current : maxSoFar;
             }
             return true;
-        }
-
-        private static bool CanTheNextValueBeADecrement(RomanCharacter current, RomanCharacter next, bool nextCanBeDecrement)
-        {
-            if (nextCanBeDecrement || next.Value == current.Value)
-                nextCanBeDecrement = false;
-            return nextCanBeDecrement;
-        }
-
-        private static bool TheNextValueIsValid(RomanCharacter current, RomanCharacter next, RomanCharacter maxSoFar)
-        {
-            return next.Value < maxSoFar.Value || next.Value < current.Value;
         }
 
         private static bool TheNextValueIsAnInvalidDecrement(RomanCharacter current, RomanCharacter next)
         {
             return next.Value < current.Value && next.Value != current.Decrementor.Value;
+        }
+
+        private static bool TheNextValueIsInvalid(RomanCharacter current, RomanCharacter next, RomanCharacter maxSoFar)
+        {
+            return next.Value < maxSoFar.Value || next.Value < current.Value;
+        }
+        private static bool CanTheNextValueBeADecrement(RomanCharacter current, RomanCharacter next, bool nextCanBeDecrement)
+        {
+            if (nextCanBeDecrement || next.Value == current.Value)
+                return false;
+            //if (next.Value == current.Decrementor.Value)
+            //    return true;
+            return false;
         }
 
         private static bool SymbolIsRepeatedTooManyTimes(RomanCharacter current, int repeat)
