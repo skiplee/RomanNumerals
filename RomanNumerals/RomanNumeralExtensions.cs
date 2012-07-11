@@ -76,32 +76,66 @@ namespace RomanNumerals
 
         public static bool RomanValidFormat(this string roman)
         {
-            var nextCanBeDecrement = true; var maxSoFar = RomanCharacter.Symbols[roman[roman.Length - 1]];
-            var repeat = 1;
-            for (int i = roman.Length - 1; i >= 0; i--)
+            int repeat = 1;
+            RomanCharacter current = GetRomanCharacter(roman[roman.Length - 1]);
+            RomanCharacter previous = null;
+            if (current == null)
+                return false;
+            var maxSoFar = current;
+            for (int i = roman.Length - 2; i >= 0; i--)
             {
-                var current = RomanCharacter.Symbols[roman[i]];
-                if (current.Value == 1) nextCanBeDecrement = false;
-                maxSoFar = current.Value > maxSoFar.Value ? current : maxSoFar;
-                var next = i == 0 ? null : RomanCharacter.Symbols[roman[i - 1]];
-                if (next != null)
+                RomanCharacter next = GetRomanCharacter(roman[i]);
+                if (next == null)
+                    return false;
+                else
                 {
-                    repeat = IncrementOrResetRepeatCount(repeat, next, current);
-                    if (SymbolIsRepeatedTooManyTimes(current, repeat)) return false;
-                    if (nextCanBeDecrement)
-                    {
-                        if (TheNextValueIsAnInvalidDecrement(current, next))
-                            return false;
-                    }
-                    else
-                    {
-                        if (TheNextValueIsInvalid(current, next, maxSoFar)) return false;
-                    }
-                    nextCanBeDecrement = CanTheNextValueBeADecrement(current, next, nextCanBeDecrement);
-
+                    if (!IsCurrentValueValid(current, next, previous, maxSoFar, repeat))
+                        return false;
+                    repeat = IncrementOrResetRepeatCount(repeat, current, next);
+                    if (repeat > current.MaxSequential) 
+                        return false;
+                    Console.WriteLine(repeat);
                 }
+                maxSoFar = current.Value > maxSoFar.Value ? current : maxSoFar;
+                previous = current;
+                current = next;
             }
             return true;
+        }
+
+        private static RomanCharacter GetRomanCharacter(char roman)
+        {
+            return RomanCharacter.Symbols.ContainsKey(roman) ? RomanCharacter.Symbols[roman] : null;
+        }
+
+        private static bool IsCurrentValueValid(RomanCharacter current, RomanCharacter next, RomanCharacter previous, RomanCharacter maxSoFar, int repeat)
+        {
+            if (NextIsValidDecrement(current, next, previous, repeat))
+                return true;
+            if (NextIsValidRegular(current, next, maxSoFar))
+                return true;
+            return false;
+        }
+
+        private static bool NextIsValidRegular(RomanCharacter current, RomanCharacter next, RomanCharacter maxSoFar)
+        {
+            return next.Value >= current.Value && next.Value >= maxSoFar.Value;
+        }
+
+        private static bool NextIsValidDecrement(RomanCharacter current, RomanCharacter next, RomanCharacter previous, int repeat)
+        {
+            var prevValue = previous == null ? 0 : previous.Value;
+            bool currentDecrements = current.Value < prevValue;
+            bool nextDecrements = next.Value < current.Value;
+            if (nextDecrements && currentDecrements)
+                return false;
+            bool nextIsValidDecrement = 
+                nextDecrements
+                && next.Value == current.Decrementor.Value
+                && repeat == 1
+                ;
+            return nextIsValidDecrement;
+
         }
 
         private static bool TheNextValueIsAnInvalidDecrement(RomanCharacter current, RomanCharacter next)
@@ -127,7 +161,7 @@ namespace RomanNumerals
             return repeat > current.MaxSequential;
         }
 
-        private static int IncrementOrResetRepeatCount(int repeat, RomanCharacter next, RomanCharacter current)
+        private static int IncrementOrResetRepeatCount(int repeat, RomanCharacter current, RomanCharacter next)
         {
             return current.Value == next.Value ? repeat + 1 : 1;
         }

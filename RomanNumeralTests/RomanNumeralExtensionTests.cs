@@ -48,6 +48,8 @@ namespace RomanNumeralTests
             var expectError = roman.RomanToInt();
         }
 
+        [TestCase("A", false)]
+        [TestCase("AX", false)]
         [TestCase("IIX", false)]
         [TestCase("VIX", false)]
         [TestCase("VX", false)]
