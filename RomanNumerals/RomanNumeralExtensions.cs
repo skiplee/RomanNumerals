@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace RomanNumerals
 {
@@ -76,7 +73,7 @@ namespace RomanNumerals
 
         public static bool RomanValidFormat(this string roman)
         {
-            int repeat = 1;
+            int countOfCurrentRepeat = 1;
             RomanCharacter current = GetRomanCharacter(roman[roman.Length - 1]);
             RomanCharacter previous = null;
             if (current == null)
@@ -87,15 +84,12 @@ namespace RomanNumerals
                 RomanCharacter next = GetRomanCharacter(roman[i]);
                 if (next == null)
                     return false;
-                else
-                {
-                    if (!IsCurrentValueValid(current, next, previous, maxSoFar, repeat))
-                        return false;
-                    repeat = IncrementOrResetRepeatCount(repeat, current, next);
-                    if (repeat > current.MaxSequential) 
-                        return false;
-                    Console.WriteLine(repeat);
-                }
+                if (!IsCurrentValueValid(current, next, previous, maxSoFar, countOfCurrentRepeat))
+                    return false;
+                countOfCurrentRepeat = IncrementOrResetRepeatCount(countOfCurrentRepeat, current, next);
+                if (countOfCurrentRepeat > current.MaxSequential) 
+                    return false;
+                Console.WriteLine(countOfCurrentRepeat);
                 maxSoFar = current.Value > maxSoFar.Value ? current : maxSoFar;
                 previous = current;
                 current = next;
@@ -136,29 +130,6 @@ namespace RomanNumerals
                 ;
             return nextIsValidDecrement;
 
-        }
-
-        private static bool TheNextValueIsAnInvalidDecrement(RomanCharacter current, RomanCharacter next)
-        {
-            return next.Value < current.Value && next.Value != current.Decrementor.Value;
-        }
-
-        private static bool TheNextValueIsInvalid(RomanCharacter current, RomanCharacter next, RomanCharacter maxSoFar)
-        {
-            return next.Value < maxSoFar.Value || next.Value < current.Value;
-        }
-        private static bool CanTheNextValueBeADecrement(RomanCharacter current, RomanCharacter next, bool nextCanBeDecrement)
-        {
-            if (nextCanBeDecrement || next.Value == current.Value)
-                return false;
-            //if (next.Value == current.Decrementor.Value)
-            //    return true;
-            return false;
-        }
-
-        private static bool SymbolIsRepeatedTooManyTimes(RomanCharacter current, int repeat)
-        {
-            return repeat > current.MaxSequential;
         }
 
         private static int IncrementOrResetRepeatCount(int repeat, RomanCharacter current, RomanCharacter next)
