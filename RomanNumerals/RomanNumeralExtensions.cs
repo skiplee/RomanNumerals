@@ -7,7 +7,7 @@ namespace RomanNumerals
         public static int RomanToInt(this string roman)
         {
             int result = ConvertRomanToInt(roman);
-            ValidateRomanToIntConversion(roman, result);
+            ConfirmByConvertingBack(roman, result);
             return result;
         }
 
@@ -46,7 +46,8 @@ namespace RomanNumerals
             try
             {
                 var converted = ConvertRomanToInt(roman);
-                return ValidateRomanToIntConversion(roman, converted);
+                ConfirmByConvertingBack(roman, converted);
+                return true;
             }
             catch
             {
@@ -54,11 +55,10 @@ namespace RomanNumerals
             }
         }
 
-        private static bool ValidateRomanToIntConversion(string expected, int number)
+        private static void ConfirmByConvertingBack(string expected, int number)
         {
-            if (number.ToRoman() == expected)
-                return true;
-            throw new ArgumentException("Invalid RomanNumeral");
+            if (number.ToRoman() != expected)
+                throw new ArgumentException("Invalid RomanNumeral");
         }
 
         public static bool RomanValidFormatOld(this string roman)
