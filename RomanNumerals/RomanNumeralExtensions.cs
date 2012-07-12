@@ -4,17 +4,87 @@ namespace RomanNumerals
 {
     public static class RomanNumeralExtensions
     {
+        public static int RomanToInt(this string roman)
+        {
+            int result = ConvertRomanToInt(roman);
+            ValidateRomanToIntConversion(roman, result);
+            return result;
+        }
+
+        private static int ConvertRomanToInt(string roman)
+        {
+            Console.WriteLine("Running string to int conversion");
+            int arabicValue = 0;
+            RomanCharacter prevCharacter = null;
+            // work from right to left; sum (or subtract) as you go
+            for (int i = roman.Length - 1; i >= 0; i--)
+            {
+                var current = GetRomanCharacter(roman[i]);
+                if (prevCharacter == null) prevCharacter = current;
+                var sign = ShouldAddOrSubtractTheCurrentValue(current, prevCharacter);
+                arabicValue += sign*current.Value;
+                prevCharacter = current;
+            }
+            return arabicValue;
+        }
+
         public static string ToRoman(this int number)
         {
             if (number <= 0)  throw new ArgumentOutOfRangeException("number", "Must be greater than zero.");
             if (number >= 4000) throw new ArgumentOutOfRangeException("number", "Must be less than or equal to 4000");
 
             var roman = String.Empty;
-            roman += RomanNumeralForNumber(number, RomanCharacter.M); 
+            roman += RomanNumeralForNumber(number, RomanCharacter.M);
             roman += RomanNumeralForNumber(number, RomanCharacter.C);
             roman += RomanNumeralForNumber(number, RomanCharacter.X);
             roman += RomanNumeralForNumber(number, RomanCharacter.I);
             return roman;
+        }
+
+        public static bool RomanValidFormat(this string roman)
+        {
+            try
+            {
+                var converted = ConvertRomanToInt(roman);
+                return ValidateRomanToIntConversion(roman, converted);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool ValidateRomanToIntConversion(string expected, int number)
+        {
+            if (number.ToRoman() == expected)
+                return true;
+            throw new ArgumentException("Invalid RomanNumeral");
+        }
+
+        public static bool RomanValidFormatOld(this string roman)
+        {
+            int countOfCurrentRepeat = 1;
+            RomanCharacter current = GetRomanCharacter(roman[roman.Length - 1]);
+            RomanCharacter previous = null;
+            if (current == null)
+                return false;
+            var maxSoFar = current;
+            for (int i = roman.Length - 2; i >= 0; i--)
+            {
+                RomanCharacter next = GetRomanCharacter(roman[i]);
+                if (next == null)
+                    return false;
+                if (!IsCurrentValueValid(current, next, previous, maxSoFar, countOfCurrentRepeat))
+                    return false;
+                countOfCurrentRepeat = IncrementOrResetRepeatCount(countOfCurrentRepeat, current, next);
+                if (countOfCurrentRepeat > current.MaxSequential)
+                    return false;
+                Console.WriteLine(countOfCurrentRepeat);
+                maxSoFar = current.Value > maxSoFar.Value ? current : maxSoFar;
+                previous = current;
+                current = next;
+            }
+            return true;
         }
 
         private static string RomanNumeralForNumber(int number, RomanCharacter romanCharacter)
@@ -38,9 +108,6 @@ namespace RomanNumerals
         /// Return the digit for a place value; for instance, for Roman Numeral C (100)
         ///   and number 3214, return 2 (the hundred's place)
         /// </summary>
-        /// <param name="number"></param>
-        /// <param name="roman"></param>
-        /// <returns></returns>
         private static int PlaceValueForRomanNumeral(int number, RomanCharacter roman)
         {
             int digit = number%(roman.Value*10)/roman.Value;
@@ -48,58 +115,18 @@ namespace RomanNumerals
                 throw new ArithmeticException("digit must be between 0 and 9 inclusive");
             return digit;
         }
-        public static int RomanToInt(this string roman)
-        {
-            if (!roman.RomanValidFormat()) throw new ArgumentException(String.Format("Invalid RomanNumeral format: {0}", roman));
-            int arabicValue = 0;
-            RomanCharacter prevCharacter = null ;
-            // work from right to left; sum (or subtract) as you go
-            for (int i = roman.Length - 1; i >= 0; i--)
-            {
-                //var current = RomanNumeralLookup.Instance.RomanCharacters[roman[i].ToString()];
-                var current = RomanCharacter.Symbols[roman[i]];
-                if (prevCharacter == null) prevCharacter = current;
-                var sign = ShouldAddOrSubtractTheCurrentValue(current, prevCharacter);
-                arabicValue += sign * current.Value;
-                prevCharacter = current;
-            }
-            return arabicValue;
-        }
-
         private static int ShouldAddOrSubtractTheCurrentValue(RomanCharacter current, RomanCharacter prevCharacter)
         {
+            if (prevCharacter == null)
+                return 1;
             return prevCharacter.Decrementor == current ? -1 : 1;
-        }
-
-        public static bool RomanValidFormat(this string roman)
-        {
-            int countOfCurrentRepeat = 1;
-            RomanCharacter current = GetRomanCharacter(roman[roman.Length - 1]);
-            RomanCharacter previous = null;
-            if (current == null)
-                return false;
-            var maxSoFar = current;
-            for (int i = roman.Length - 2; i >= 0; i--)
-            {
-                RomanCharacter next = GetRomanCharacter(roman[i]);
-                if (next == null)
-                    return false;
-                if (!IsCurrentValueValid(current, next, previous, maxSoFar, countOfCurrentRepeat))
-                    return false;
-                countOfCurrentRepeat = IncrementOrResetRepeatCount(countOfCurrentRepeat, current, next);
-                if (countOfCurrentRepeat > current.MaxSequential) 
-                    return false;
-                Console.WriteLine(countOfCurrentRepeat);
-                maxSoFar = current.Value > maxSoFar.Value ? current : maxSoFar;
-                previous = current;
-                current = next;
-            }
-            return true;
         }
 
         private static RomanCharacter GetRomanCharacter(char roman)
         {
-            return RomanCharacter.Symbols.ContainsKey(roman) ? RomanCharacter.Symbols[roman] : null;
+            if (RomanCharacter.Symbols.ContainsKey(roman)) return RomanCharacter.Symbols[roman];
+            return null;
+            //else throw new ArgumentOutOfRangeException(String.Format("roman numerals cannot contain the value '{0}'", roman.ToString()));
         }
 
         private static bool IsCurrentValueValid(RomanCharacter current, RomanCharacter next, RomanCharacter previous, RomanCharacter maxSoFar, int repeat)
